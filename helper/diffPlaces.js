@@ -1,4 +1,6 @@
 const _ = require('lodash');
+const removeAccents = require('remove-accents');
+const unicode = require('./unicode');
 const placeTypes = require('./placeTypes');
 const canonicalLayers = require('../helper/type_mapping').getCanonicalLayers();
 const field = require('../helper/fieldValue');
@@ -57,6 +59,14 @@ function isParentHierarchyDifferent(item1, item2){
   // note: this really shouldn't happen as at least one parent should exist
   if( !isPojo1 || !isPojo2 ){ return false; }
 
+  // special handling of postal codes, which we consider to be strictly
+  // unique within a single country/dependency regardless of the rest of
+  // the hierarchy (ie. we ignore other parent properties)
+  if( item1.layer === 'postalcode' && item2.layer === 'postalcode' ) {
+    parent1 = _.pick(parent1, ['country_id', 'dependency_id']);
+    parent2 = _.pick(parent2, ['country_id', 'dependency_id']);
+  }
+
   // get a numerical placetype 'rank' to use for comparing parent levels
   // note: a rank of Infinity is returned if the item layer is not listed
   // in the $placeTypes array.
@@ -86,7 +96,7 @@ function isParentHierarchyDifferent(item1, item2){
     if (rank > maxRank){ return false; }
 
     // ensure the parent ids are the same for all placetypes
-    return isPropertyDifferent( item1.parent, item2.parent, `${placeType}_id` );
+    return isPropertyDifferent( parent1, parent2, `${placeType}_id` );
   });
 }
 
@@ -225,11 +235,14 @@ function getPlaceTypeRank(item) {
 }
 
 /**
- * lowercase characters and remove some punctuation
+ * apply unicode normalization, lowercase characters and remove
+ * diacritics and some punctuation.
  */
 function normalizeString(str){
-  return str.toLowerCase().split(/[ ,-]+/).join(' ');
+  return removeAccents(unicode.normalize(str)).toLowerCase().split(/[ ,-]+/).join(' ');
 }
 
 module.exports.isDifferent = isDifferent;
 module.exports.layerPreferences = layerPreferences;
+module.exports.isNameDifferent = isNameDifferent;
+module.exports.normalizeString = normalizeString;

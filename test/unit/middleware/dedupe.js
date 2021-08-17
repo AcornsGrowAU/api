@@ -129,6 +129,38 @@ module.exports.tests.dedupe = function(test, common) {
       t.end();
     });
   });
+
+  test('dedup with accents', function (t) {
+    var req = {
+      clean: {
+        text: 'Forêt du Gâvre',
+        size: 100
+      }
+    };
+    var res = {
+      data:  [
+        {
+          'name': { 'default': 'Forêt du Gâvre' },
+          'source': 'osm',
+          'source_id': 'node/1692538115',
+          'layer': 'venue'
+        },
+        {
+          'name': { 'default': 'Foret du Gavre' },
+          'source': 'geonames',
+          'source_id': '3016473',
+          'layer': 'venue'
+        }
+      ]
+    };
+
+    var expectedCount = 1;
+    dedupe(req, res, function () {
+      t.equal(res.data.length, expectedCount, 'results have fewer items than before');
+      t.deepEqual(res.data[0].source, 'osm', 'osm result won');
+      t.end();
+    });
+  });
 };
 
 
@@ -353,6 +385,42 @@ module.exports.tests.priority = function(test, common) {
             'zip': '54321'
           }
         }
+      ]
+    };
+
+    var expectedCount = 1;
+    dedupe(req, res, function () {
+      t.equal(res.data.length, expectedCount, 'results have fewer items than before');
+      t.deepEqual(res.data[0].source_id, '654321', 'openstreetmap result with zip won');
+      t.end();
+    });
+  });
+
+  test('osm with zip takes priority over openaddresses without zip, regardless of order of results', function (t) {
+    var req = {
+      clean: {
+        text: '100 Main St',
+        size: 100
+      }
+    };
+    var res = {
+      data:  [
+        {
+          'name': { 'default': '100 Main St' },
+          'source': 'openstreetmap',
+          'source_id': '654321',
+          'layer': 'address',
+          'address_parts': {
+            'zip': '54321'
+          }
+        },
+        {
+          'name': { 'default': '100 Main St' },
+          'source': 'openaddresses',
+          'source_id': '123456',
+          'layer': 'address',
+          'address_parts': {}
+        },
       ]
     };
 

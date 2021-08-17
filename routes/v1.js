@@ -229,6 +229,7 @@ function addRoutes(app, peliasConfig) {
       middleware.confidenceScoreFallback(),
       middleware.interpolate(interpolationService, interpolationShouldExecute, interpolationConfiguration),
       middleware.sortResponseData(sorting, predicates.hasAdminOnlyResults),
+      middleware.applyOverrides(),
       middleware.dedupe(),
       middleware.accuracy(),
       middleware.localNamingConventions(),
@@ -251,6 +252,7 @@ function addRoutes(app, peliasConfig) {
       middleware.confidenceScore(peliasConfig.api),
       middleware.confidenceScoreFallback(),
       middleware.interpolate(interpolationService, interpolationShouldExecute, interpolationConfiguration),
+      middleware.applyOverrides(),
       middleware.dedupe(),
       middleware.accuracy(),
       middleware.localNamingConventions(),
@@ -269,6 +271,7 @@ function addRoutes(app, peliasConfig) {
       controllers.search(peliasConfig, esclient, queries.autocomplete, not(hasResponseDataOrRequestErrors)),
       middleware.distance('focus.point.'),
       middleware.confidenceScore(peliasConfig.api),
+      middleware.applyOverrides(),
       middleware.dedupe(),
       middleware.accuracy(),
       middleware.localNamingConventions(),
@@ -290,6 +293,7 @@ function addRoutes(app, peliasConfig) {
       // reverse confidence scoring depends on distance from origin
       //  so it must be calculated first
       middleware.confidenceScoreReverse(),
+      middleware.applyOverrides(),
       middleware.dedupe(),
       middleware.accuracy(),
       middleware.localNamingConventions(),
@@ -310,6 +314,7 @@ function addRoutes(app, peliasConfig) {
       // reverse confidence scoring depends on distance from origin
       //  so it must be calculated first
       middleware.confidenceScoreReverse(),
+      middleware.applyOverrides(),
       middleware.dedupe(),
       middleware.accuracy(),
       middleware.localNamingConventions(),
@@ -325,6 +330,7 @@ function addRoutes(app, peliasConfig) {
       sanitizers.place.middleware(peliasConfig.api),
       middleware.requestLanguage,
       controllers.place(peliasConfig.api, esclient),
+      middleware.expandDocument(peliasConfig.api, esclient),
       middleware.accuracy(),
       middleware.localNamingConventions(),
       middleware.renamePlacenames(),
